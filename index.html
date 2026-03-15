@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>n8n Workflow Recommender — AI-Powered</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --accent: #a371f7;
+    --accent2: #79c0ff;
+    --green: #56d364;
+    --orange: #f0883e;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+
+  /* ── Header ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .logo { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .logo .spark { font-size: 22px; }
+  .badges { display: flex; gap: 8px; flex-wrap: wrap; }
+  .badge { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; font-size: 12px; color: var(--text2); }
+
+  /* ── Hero ── */
+  .hero { text-align: center; padding: 56px 24px 32px; }
+  .hero h1 { font-size: 42px; font-weight: 800; line-height: 1.15; margin-bottom: 14px; }
+  .hero h1 .purple { color: var(--accent); }
+  .hero p { color: var(--text2); font-size: 17px; max-width: 560px; margin: 0 auto; line-height: 1.6; }
+
+  /* ── Chat container ── */
+  .chat-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+
+  /* ── Messages ── */
+  .messages { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; min-height: 80px; }
+
+  .msg { display: flex; gap: 12px; align-items: flex-start; }
+  .msg.user { flex-direction: row-reverse; }
+
+  .avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+    background: var(--surface2); border: 1px solid var(--border);
+  }
+  .msg.user .avatar { background: var(--accent); border-color: var(--accent); }
+
+  .bubble {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    max-width: 85%;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .msg.user .bubble {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* ── Typing indicator ── */
+  .typing { display: flex; gap: 5px; padding: 4px 0; align-items: center; }
+  .typing span {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--text2); display: inline-block;
+    animation: bounce 1.2s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+  }
+
+  /* ── Recommendation cards ── */
+  .rec-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+
+  .rec-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    transition: border-color 0.2s;
+  }
+  .rec-card:hover { border-color: var(--accent); }
+
+  .rec-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .rec-name { font-size: 14px; font-weight: 600; line-height: 1.4; flex: 1; }
+  .rec-score {
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    flex-shrink: 0;
+  }
+
+  .rec-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .rec-tag {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  .rec-actions { display: flex; gap: 8px; }
+  .btn-download {
+    background: var(--green);
+    color: #000;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-download:hover { opacity: 0.85; }
+  .btn-convert {
+    background: var(--surface);
+    color: var(--accent2);
+    border: 1px solid var(--accent2);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+  }
+  .btn-convert:hover { background: var(--accent2); color: #000; }
+
+  /* ── Input area ── */
+  .input-area {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px 4px 4px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: border-color 0.2s;
+  }
+  .input-area:focus-within { border-color: var(--accent); }
+
+  .input-area input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 15px;
+    padding: 10px 0;
+  }
+  .input-area input::placeholder { color: var(--text2); }
+
+  .send-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+  }
+  .send-btn:hover { opacity: 0.85; }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── Suggestion chips ── */
+  .suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--text); }
+
+  /* ── No results ── */
+  .no-results { color: var(--text2); font-size: 14px; margin-top: 8px; }
+
+  /* ── Footer ── */
+  footer {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 20px 32px;
+    text-align: center;
+    color: var(--text2);
+    font-size: 13px;
+  }
+  footer a { color: var(--accent2); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* ── How it works ── */
+  .how { max-width: 760px; margin: 0 auto; padding: 0 24px 48px; }
+  .how h2 { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+  .how-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .how-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .how-card .icon { font-size: 28px; margin-bottom: 8px; }
+  .how-card .title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .how-card .desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="spark">✨</span>
+    n8n Workflow Recommender
+  </div>
+  <div class="badges">
+    <span class="badge">🆓 Free</span>
+    <span class="badge">⚡ Instant</span>
+    <span class="badge">📦 2,055 workflows</span>
+  </div>
+</header>
+
+<div class="hero">
+  <h1>Tell me what you want<br>to <span class="purple">automate</span></h1>
+  <p>Describe your task in plain English and get the best matching n8n workflows — instantly.</p>
+</div>
+
+<div class="chat-wrap">
+
+  <!-- Suggestion chips -->
+  <div class="suggestions" id="chips">
+    <div class="chip" onclick="sendChip(this)">📧 Send emails automatically</div>
+    <div class="chip" onclick="sendChip(this)">🤖 AI chatbot for my website</div>
+    <div class="chip" onclick="sendChip(this)">📊 Save data to Google Sheets</div>
+    <div class="chip" onclick="sendChip(this)">💬 Slack notifications</div>
+    <div class="chip" onclick="sendChip(this)">🛒 Shopify order alerts</div>
+    <div class="chip" onclick="sendChip(this)">📱 Telegram bot</div>
+    <div class="chip" onclick="sendChip(this)">🐙 GitHub to Jira sync</div>
+    <div class="chip" onclick="sendChip(this)">📸 Instagram auto post</div>
+  </div>
+
+  <!-- Messages -->
+  <div class="messages" id="messages">
+    <div class="msg bot">
+      <div class="avatar">🤖</div>
+      <div class="bubble">
+        Hi! I'm your n8n workflow assistant. Tell me what you want to automate and I'll find the best matching workflows from a library of <strong>2,055 templates</strong>.<br><br>
+        Try typing something like <em>"send a Slack message when I get an email"</em> or click a suggestion above! 👆
+      </div>
+    </div>
+  </div>
+
+  <!-- Input -->
+  <div class="input-area">
+    <input type="text" id="userInput" placeholder="e.g. I want to send a Slack message when a form is submitted..." maxlength="300" onkeydown="if(event.key==='Enter') sendMessage()">
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+  </div>
+
+</div>
+
+<!-- How it works -->
+<div class="how">
+  <h2>✅ How it works</h2>
+  <div class="how-grid">
+    <div class="how-card">
+      <div class="icon">💬</div>
+      <div class="title">Describe your task</div>
+      <div class="desc">Write what you want to automate in plain English — no technical knowledge needed</div>
+    </div>
+    <div class="how-card">
+      <div class="icon">🔍</div>
+      <div class="title">Smart matching</div>
+      <div class="desc">We analyze your keywords and match them against 2,055 real n8n workflow templates</div>
+    </div>
+    <div class="how-card">
+      <div class="icon">📥</div>
+      <div class="title">Download & use</div>
+      <div class="desc">Download the JSON workflow and import it directly into your n8n instance</div>
+    </div>
+    <div class="how-card">
+      <div class="icon">🐍</div>
+      <div class="title">Convert to Python</div>
+      <div class="desc">Use our converter tool to turn any workflow into a Python script</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Built by <a href="https://github.com/metehanulusoy" target="_blank">metehanulusoy</a> ·
+  <a href="https://github.com/metehanulusoy/awesome-n8n-workflows" target="_blank">Browse all workflows</a> ·
+  <a href="https://metehanulusoy.github.io/n8n-workflow-to-python" target="_blank">Convert to Python</a>
+</footer>
+
+<script>
+// ─────────────────────────────────────────
+//  Keyword → service/category mapping
+// ─────────────────────────────────────────
+const KEYWORD_MAP = {
+  // Communication
+  'slack': ['slack'], 'message': ['slack','telegram','discord'],
+  'notify': ['slack','telegram','discord','gmail'],
+  'notification': ['slack','telegram','discord','gmail'],
+  'chat': ['slack','telegram','discord'],
+  'telegram': ['telegram'], 'discord': ['discord'],
+  'whatsapp': ['whatsapp'], 'sms': ['twilio','sms'],
+  'twilio': ['twilio'],
+
+  // Email
+  'email': ['gmail','outlook','smtp'], 'mail': ['gmail','outlook','smtp'],
+  'gmail': ['gmail'], 'outlook': ['outlook'],
+  'send': ['gmail','slack','telegram'],
+  'newsletter': ['mailchimp','sendgrid'],
+  'mailchimp': ['mailchimp'], 'sendgrid': ['sendgrid'],
+
+  // AI / LLM
+  'ai': ['openai','anthropic','langchain'], 'chatbot': ['openai','langchain'],
+  'openai': ['openai'], 'chatgpt': ['openai'],
+  'gpt': ['openai'], 'claude': ['anthropic'],
+  'llm': ['openai','anthropic'], 'generate': ['openai','anthropic'],
+  'summarize': ['openai','anthropic'], 'summary': ['openai','anthropic'],
+  'translate': ['openai','anthropic','deepl'],
+  'image': ['openai','stability','midjourney'],
+
+  // Data / Spreadsheets
+  'google sheets': ['googlesheets'], 'sheets': ['googlesheets'],
+  'spreadsheet': ['googlesheets','airtable','excel'],
+  'airtable': ['airtable'], 'database': ['postgres','mysql','mongodb'],
+  'postgres': ['postgres'], 'mysql': ['mysql'],
+  'mongodb': ['mongodb'], 'csv': ['csv'],
+  'excel': ['excel'], 'notion': ['notion'],
+
+  // CRM / Sales
+  'crm': ['hubspot','salesforce'], 'hubspot': ['hubspot'],
+  'salesforce': ['salesforce'], 'lead': ['hubspot','salesforce'],
+  'customer': ['hubspot','salesforce','zendesk'],
+  'contact': ['hubspot','salesforce'],
+
+  // E-commerce
+  'shopify': ['shopify'], 'order': ['shopify','woocommerce'],
+  'woocommerce': ['woocommerce'], 'product': ['shopify','woocommerce'],
+  'payment': ['stripe','paypal'], 'stripe': ['stripe'],
+  'invoice': ['stripe','quickbooks'],
+
+  // Social Media
+  'twitter': ['twitter'], 'instagram': ['instagram'],
+  'facebook': ['facebook'], 'linkedin': ['linkedin'],
+  'social': ['twitter','instagram','facebook','linkedin'],
+  'post': ['twitter','instagram','facebook','linkedin'],
+  'youtube': ['youtube'],
+
+  // Dev / Tech
+  'github': ['github'], 'gitlab': ['gitlab'],
+  'jira': ['jira'], 'trello': ['trello'],
+  'webhook': ['webhook'], 'api': ['httpRequest'],
+  'http': ['httpRequest'], 'request': ['httpRequest'],
+  'deploy': ['github','gitlab'], 'code': ['code'],
+  'schedule': ['schedule'], 'cron': ['schedule'],
+  'daily': ['schedule'], 'weekly': ['schedule'],
+  'automatic': ['schedule'],
+
+  // Files
+  'drive': ['googledrive'], 'google drive': ['googledrive'],
+  'dropbox': ['dropbox'], 'file': ['googledrive','dropbox','s3'],
+  's3': ['s3'], 'upload': ['googledrive','s3'],
+
+  // Monitoring
+  'monitor': ['rss','httpRequest'], 'alert': ['slack','telegram','gmail'],
+  'rss': ['rss'], 'news': ['rss'],
+  'price': ['httpRequest'], 'weather': ['httpRequest'],
+
+  // Calendar
+  'calendar': ['googlecalendar'], 'meeting': ['googlecalendar','zoom'],
+  'zoom': ['zoom'], 'event': ['googlecalendar'],
+  'remind': ['googlecalendar','slack','telegram'],
+
+  // Support
+  'zendesk': ['zendesk'], 'ticket': ['zendesk','jira'],
+  'support': ['zendesk','intercom'], 'intercom': ['intercom'],
+};
+
+// ─────────────────────────────────────────
+//  Scoring function
+// ─────────────────────────────────────────
+function scoreWorkflow(workflow, keywords, matchedServices) {
+  let score = 0;
+  const name = (workflow.n || '').toLowerCase();
+  const category = (workflow.c || '').toLowerCase();
+  const services = (workflow.s || []).map(s => s.toLowerCase());
+  const filename = (workflow.f || '').toLowerCase();
+
+  // Direct keyword match in name
+  keywords.forEach(kw => {
+    if (name.includes(kw)) score += 10;
+    if (filename.includes(kw)) score += 5;
+    if (category.includes(kw)) score += 3;
+  });
+
+  // Service match
+  matchedServices.forEach(svc => {
+    if (services.some(s => s.includes(svc))) score += 8;
+    if (name.includes(svc)) score += 6;
+  });
+
+  // Bonus for more nodes (more complete workflows)
+  if (workflow.nc > 5) score += 2;
+  if (workflow.nc > 10) score += 2;
+
+  return score;
+}
+
+function extractKeywords(text) {
+  const lower = text.toLowerCase();
+  const stopWords = new Set(['i','want','to','a','an','the','and','or','with','for','my','me','can','how','when','if','is','it','in','on','from','into','make','create','build','set','up','that','this','what','get','use','using','automatically','auto','need','would','like']);
+
+  // Check for multi-word phrases first
+  const phrases = Object.keys(KEYWORD_MAP).filter(k => k.includes(' '));
+  const matchedPhrases = phrases.filter(p => lower.includes(p));
+
+  // Single word keywords
+  const words = lower.split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w));
+
+  return { words, phrases: matchedPhrases };
+}
+
+function getMatchedServices(words, phrases) {
+  const services = new Set();
+  phrases.forEach(p => (KEYWORD_MAP[p] || []).forEach(s => services.add(s)));
+  words.forEach(w => (KEYWORD_MAP[w] || []).forEach(s => services.add(s)));
+  return [...services];
+}
+
+function recommend(query) {
+  if (!window.WORKFLOWS || !WORKFLOWS.length) {
+    return { results: [], matched: [] };
+  }
+
+  const { words, phrases } = extractKeywords(query);
+  const allKeywords = [...words, ...phrases.map(p => p.split(' ')).flat()];
+  const matchedServices = getMatchedServices(words, phrases);
+
+  // Score all workflows
+  const scored = WORKFLOWS.map(w => ({
+    ...w,
+    _score: scoreWorkflow(w, allKeywords, matchedServices)
+  })).filter(w => w._score > 0);
+
+  // Sort by score, take top 6
+  scored.sort((a, b) => b._score - a._score);
+  const top = scored.slice(0, 6);
+
+  return { results: top, matched: [...new Set([...words.filter(w => KEYWORD_MAP[w]), ...phrases])] };
+}
+
+// ─────────────────────────────────────────
+//  UI
+// ─────────────────────────────────────────
+function addMessage(content, isUser = false, isTyping = false) {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + (isUser ? 'user' : 'bot');
+  div.innerHTML = `
+    <div class="avatar">${isUser ? '🧑' : '🤖'}</div>
+    <div class="bubble">${isTyping ? '<div class="typing"><span></span><span></span><span></span></div>' : content}</div>
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+function removeTyping(el) {
+  el.remove();
+}
+
+function buildResultHTML(results, matched) {
+  if (results.length === 0) {
+    return `<p class="no-results">😕 No matching workflows found. Try different keywords like <em>slack, email, github, shopify...</em></p>`;
+  }
+
+  const matchedStr = matched.length ? `<p style="color:var(--text2);font-size:13px;margin-bottom:12px;">🔍 Matched on: <strong style="color:var(--text)">${matched.join(', ')}</strong></p>` : '';
+
+  const cards = results.map((w, i) => {
+    const services = (w.s && w.s.length) ? w.s.slice(0, 4) : ['HTTP/Webhook'];
+    const name = w.n || w.f.replace('.json','').replace(/_/g,' ');
+    const downloadUrl = `https://raw.githubusercontent.com/metehanulusoy/awesome-n8n-workflows/main/workflows/${w.f}`;
+    const scoreLabel = i === 0 ? '🥇 Best match' : i === 1 ? '🥈 Great match' : `Match #${i+1}`;
+
+    return `
+      <div class="rec-card">
+        <div class="rec-header">
+          <div class="rec-name">${escHtml(name)}</div>
+          <div class="rec-score">${scoreLabel}</div>
+        </div>
+        <div class="rec-tags">
+          <span class="rec-tag">📦 ${w.nc} nodes</span>
+          <span class="rec-tag">${w.c}</span>
+          ${services.map(s => `<span class="rec-tag">${escHtml(s)}</span>`).join('')}
+        </div>
+        <div class="rec-actions">
+          <button class="btn-download" onclick="downloadWorkflow('${w.f}')">⬇ Download JSON</button>
+          <a class="btn-convert" href="https://metehanulusoy.github.io/n8n-workflow-to-python" target="_blank">🐍 Convert to Python</a>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return matchedStr + `<div class="rec-list">${cards}</div>`;
+}
+
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function downloadWorkflow(fname) {
+  const url = `https://raw.githubusercontent.com/metehanulusoy/awesome-n8n-workflows/main/workflows/${fname}`;
+  fetch(url)
+    .then(r => r.blob())
+    .then(blob => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = fname;
+      a.click();
+    });
+}
+
+function sendMessage() {
+  const input = document.getElementById('userInput');
+  const query = input.value.trim();
+  if (!query) return;
+
+  // Hide chips after first message
+  document.getElementById('chips').style.display = 'none';
+
+  // Add user message
+  addMessage(escHtml(query), true);
+  input.value = '';
+  document.getElementById('sendBtn').disabled = true;
+
+  // Show typing indicator
+  const typingEl = addMessage('', false, true);
+
+  // Simulate thinking delay
+  setTimeout(() => {
+    removeTyping(typingEl);
+
+    const { results, matched } = recommend(query);
+    const html = buildResultHTML(results, matched);
+
+    const replyText = results.length > 0
+      ? `Found <strong>${results.length} workflows</strong> matching your request! Here are the best ones:`
+      : `Let me search for that...`;
+
+    addMessage(replyText + '<div style="margin-top:12px">' + html + '</div>');
+    document.getElementById('sendBtn').disabled = false;
+
+    // Follow-up suggestion
+    if (results.length > 0) {
+      setTimeout(() => {
+        addMessage(`💡 <em>Want to convert any of these to Python? Click "Convert to Python" or visit our <a href="https://metehanulusoy.github.io/n8n-workflow-to-python" target="_blank" style="color:var(--accent2)">converter tool</a>.</em>`);
+      }, 800);
+    }
+  }, 900);
+}
+
+function sendChip(el) {
+  document.getElementById('userInput').value = el.textContent.replace(/^[^\s]+\s/, '');
+  sendMessage();
+}
+
+// Enter to send
+document.getElementById('userInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendMessage();
+});
+</script>
+
+<!-- Load workflow data from the main repo -->
+<script>
+// We embed a small subset of popular workflows for demo
+// In production, this would load from workflow_data.js
+const WORKFLOWS_DEMO = [];
+</script>
+<script src="https://metehanulusoy.github.io/awesome-n8n-workflows/workflow_data.js"
+        onerror="console.log('Using demo mode')"></script>
+<script>
+if (typeof WORKFLOWS === 'undefined') {
+  // Fallback demo data if main data can't load
+  window.WORKFLOWS = [
+    {f:'slack_notification.json', n:'Slack Notification on New Email', c:'📞 Communication Bots', s:['Slack','Gmail'], nc:4},
+    {f:'openai_chatbot.json', n:'OpenAI Customer Support Chatbot', c:'🤖 AI & LLM Agents', s:['OpenAI','Webhook'], nc:7},
+    {f:'github_jira.json', n:'Sync GitHub Issues to Jira', c:'⚙️ DevOps & GitHub', s:['GitHub','Jira'], nc:5},
+    {f:'shopify_slack.json', n:'Shopify Order Alert on Slack', c:'🛒 E-Commerce', s:['Shopify','Slack'], nc:4},
+    {f:'google_sheets_crm.json', n:'Save HubSpot Contacts to Google Sheets', c:'📊 CRM & Sales', s:['HubSpot','GoogleSheets'], nc:6},
+    {f:'telegram_bot.json', n:'Telegram Bot with AI Responses', c:'📞 Communication Bots', s:['Telegram','OpenAI'], nc:5},
+  ];
+}
+</script>
+
+</body>
+</html>
