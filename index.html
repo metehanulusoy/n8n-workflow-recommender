@@ -402,20 +402,24 @@
       async function loadWorkflows() {
         const badge = document.getElementById("statusBadge");
         try {
+          // Use git tree API to get ALL files in one call (no pagination limit)
           const res = await fetch(
-            "https://api.github.com/repos/metehanulusoy/awesome-n8n-workflows/contents/workflows",
+            "https://api.github.com/repos/metehanulusoy/awesome-n8n-workflows/git/trees/main?recursive=1",
           );
-          if (!res.ok) throw new Error("API error");
-          const files = await res.json();
-          WORKFLOWS = files
-            .filter((f) => f.name.endsWith(".json"))
-            .map((f) => f.name);
+          if (!res.ok) throw new Error("API error " + res.status);
+          const data = await res.json();
+          WORKFLOWS = data.tree
+            .filter(
+              (f) =>
+                f.path.startsWith("workflows/") && f.path.endsWith(".json"),
+            )
+            .map((f) => f.path.replace("workflows/", ""));
           badge.textContent = `✅ ${WORKFLOWS.length} workflows loaded`;
           badge.className = "status-badge loaded";
         } catch (e) {
-          badge.textContent =
-            "⚠️ Could not load workflows — GitHub API limit may be reached";
+          badge.textContent = "⚠️ Could not load workflows — try refreshing";
           badge.className = "status-badge error";
+          console.error(e);
         }
       }
 
